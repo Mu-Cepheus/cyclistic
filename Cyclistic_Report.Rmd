@@ -1,16 +1,13 @@
 ---
-title: "Cyclistic_Report"
-author: "Beam"
+title: "Case Analysis: How does a bike-share navigate speedy success?"
+author: "Martin Gregorio D. Moraleja III"
 date: "2023-05-23"
 output:
-  word_document: default
+  pdf_document: default
   html_document: default
+  word_document: default
+urlcolor: blue
 ---
-
-# Case Analysis: How does a bike-share navigate speedy success?
-##### Author: Martin Gregorio D. Moraleja III
-##### Date: 23-05-2023
-
 ## About the company
 In 2016, Cyclistic launched a successful bike-share offering. Since then, the program has grown to a fleet of 5,824 bicycles that
 are geotracked and locked into a network of 692 stations across Chicago. The bikes can be unlocked from one station and
@@ -80,7 +77,7 @@ Data processing was done entirely in R, no changes to the files were made
 
 1. All values were loaded and merged into a single dataframe.
 ```{r data collection, results='hide', message=FALSE}
-setwd("~/Documents/Acad/Google Data/Case/data")
+setwd("~/Documents/Acad/Google Data/Case/cyclistic/data")
 may05 <- read_csv("202205-divvy-tripdata.csv")
 jun06 <- read_csv("202206-divvy-tripdata.csv")
 jul07 <- read_csv("202207-divvy-tripdata.csv")
@@ -120,7 +117,8 @@ is.numeric(all_trips$ride_length)
 ```
 5. Remove negative ride lengths, rows with NA values, and row duplicates **Please note**: if you intend to make use of start/stop locations for analysis, then perform this step to remove rows where station data is missing
 ```{r final clean, results='hide', message=FALSE}
-all_trips_v2 <- all_trips[!(all_trips$start_station_name == "HQ QR" | all_trips$ride_length<0),]
+all_trips_v2 <- all_trips[!(all_trips$start_station_name == "HQ QR" | 
+                              all_trips$ride_length<0),]
 remove(all_trips)
 
 all_trips_v2 <- na.omit(all_trips_v2) 
@@ -144,8 +142,10 @@ aggregate(all_trips_v2$ride_length ~ all_trips_v2$member_casual, FUN = min)
 ```
 3. Obtain daily average ride time for annual members and casual riders
 ```{r get average ride times}
-all_trips_v2$day_of_week <- ordered(all_trips_v2$day_of_week, levels=c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))
-aggregate(all_trips_v2$ride_length ~ all_trips_v2$member_casual + all_trips_v2$day_of_week, FUN = mean)
+all_trips_v2$day_of_week <- ordered(all_trips_v2$day_of_week, 
+  levels=c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))
+aggregate(all_trips_v2$ride_length ~ all_trips_v2$member_casual + 
+            all_trips_v2$day_of_week, FUN = mean)
 ```
 Summarized table of results:
 
@@ -171,7 +171,7 @@ Average ride lengths for members and casuals:
 Using the results of analysis visualizations were produced to communicate key findings to stakeholders.\
 
 1. Number of rides per rider type
-```{r rides per rider type}
+```{r rides per rider type, message=FALSE}
 all_trips_v2 %>% 
   mutate(weekday = wday(started_at, label = TRUE)) %>% 
   group_by(member_casual, weekday) %>% 
@@ -182,12 +182,15 @@ all_trips_v2 %>%
   geom_col(position = "dodge")+
   scale_y_continuous(labels = comma)+
   scale_fill_manual(values = c("#bf616a","#88c0d0"))+
-  labs(title = "Number of rides per rider type", subtitle = "Averaged values over 12 months", caption = "Data from May 2022 to April 2023",y = "Number of rides", x = "Weekday", fill = "Membership type")
+  labs(title = "Number of rides per rider type", 
+       subtitle = "Averaged values over 12 months", 
+       caption = "Data from May 2022 to April 2023",y = "Number of rides", 
+       x = "Weekday", fill = "Membership type")
 ```
 According to this visualization, for the duration of this 12 month period annual members book more bicycles than casual members, and they do so during the weekdays, a survey component could be used to find out if these clients use their bicycles to travel to work, it is also possible to conduct further analysis on station locations to identify if these annual members travel along a fixed route.
 
 2. Average duration per bike trip
-```{r average duration per bike trip}
+```{r average duration per bike trip, message=FALSE}
 all_trips_v2 %>% 
   mutate(weekday = wday(started_at, label = TRUE)) %>% 
   group_by(member_casual, weekday) %>% 
@@ -197,7 +200,10 @@ all_trips_v2 %>%
   ggplot(aes(x = weekday, y = average_duration, fill = member_casual)) +
   geom_col(position = "dodge")+
   scale_fill_manual(values = c("#bf616a","#88c0d0"))+
-  labs(title = "Average duration per bike trip", subtitle = "Averaged values over 12 months", caption = "Data from May 2022 to April 2023",y = "Duration in minutes", x = "Weekday", fill = "Membership type")
+  labs(title = "Average duration per bike trip", 
+       subtitle = "Averaged values over 12 months", 
+       caption = "Data from May 2022 to April 2023",y = "Duration in minutes", 
+       x = "Weekday", fill = "Membership type")
 ```
 Comparing the results of this visualization to the previous one indicates a crucial discovery: despite booking fewer bicycles casual riders take longer trips, and they do so during weekends, whereas annual members have much less variance in their trip durations even during weekends. We can surmise that casual riders might be biking for leisure and could incorporate a survey component into our analysis to discover if such an assumption is true. 
 
